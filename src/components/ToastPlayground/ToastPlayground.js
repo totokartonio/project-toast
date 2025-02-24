@@ -4,18 +4,35 @@ import Button from "../Button";
 
 import styles from "./ToastPlayground.module.css";
 
-import Toast from "../Toast/Toast";
+import ToastShelf from "../ToastShelf/ToastShelf";
 
 const VARIANT_OPTIONS = ["notice", "warning", "success", "error"];
-
-function dismissToast() {
-  setToastShown(false);
-}
 
 function ToastPlayground() {
   [toastVariant, setToastVariant] = React.useState("");
   [message, setMessage] = React.useState("");
-  [toastShown, setToastShown] = React.useState(false);
+  [toasts, setToasts] = React.useState([]);
+
+  function handleOnSubmit(event) {
+    event.preventDefault();
+    const newToast = {
+      id: crypto.randomUUID(),
+      message: message,
+      variant: toastVariant,
+    };
+
+    const nextToasts = [...toasts, newToast];
+
+    setToasts(nextToasts);
+  }
+
+  function dismissToast(id) {
+    const nextToasts = toasts.filter((toast) => {
+      return toast.id !== id;
+    });
+
+    setToasts(nextToasts);
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -24,13 +41,11 @@ function ToastPlayground() {
         <h1>Toast Playground</h1>
       </header>
 
-      {toastShown && (
-        <Toast variant={toastVariant} dismissToast={dismissToast}>
-          {message}
-        </Toast>
+      {toasts.length > 0 && (
+        <ToastShelf toasts={toasts} dismissToast={dismissToast} />
       )}
 
-      <div className={styles.controlsWrapper}>
+      <form className={styles.controlsWrapper} onSubmit={handleOnSubmit}>
         <div className={styles.row}>
           <label
             htmlFor="message"
@@ -41,48 +56,41 @@ function ToastPlayground() {
           </label>
 
           <div className={styles.inputWrapper}>
-            <form
-              id="message-input"
-              onSubmit={(event) => event.preventDefault()}
-            >
-              <textarea
-                id="message"
-                className={styles.messageInput}
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-              />
-            </form>
+            <textarea
+              id="message"
+              className={styles.messageInput}
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+            />
           </div>
         </div>
 
         <div className={styles.row}>
           <div className={styles.label}>Variant</div>
-          <form id="variant-input" onSubmit={(event) => event.preventDefault()}>
-            <div className={`${styles.inputWrapper} ${styles.radioWrapper}`}>
-              {VARIANT_OPTIONS.map((option) => (
-                <label htmlFor={`variant-${option}`} key={`variant-${option}`}>
-                  <input
-                    id={`variant-${option}`}
-                    type="radio"
-                    name={option}
-                    value={option}
-                    checked={toastVariant === option}
-                    onChange={(event) => setToastVariant(event.target.value)}
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </form>
+          <div className={`${styles.inputWrapper} ${styles.radioWrapper}`}>
+            {VARIANT_OPTIONS.map((option) => (
+              <label htmlFor={`variant-${option}`} key={`variant-${option}`}>
+                <input
+                  id={`variant-${option}`}
+                  type="radio"
+                  name={option}
+                  value={option}
+                  checked={toastVariant === option}
+                  onChange={(event) => setToastVariant(event.target.value)}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className={styles.row}>
           <div className={styles.label} />
           <div className={`${styles.inputWrapper} ${styles.radioWrapper}`}>
-            <Button onClick={() => setToastShown(true)}>Pop Toast!</Button>
+            <Button>Pop Toast!</Button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
